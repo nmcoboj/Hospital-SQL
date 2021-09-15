@@ -56,6 +56,8 @@ public class Main {
                 citas, consultorios, medicamentos);
 
         control.inicializar_consultorios();
+        control.db_borrar_medicamentos();
+        control.db_borrar_citas();
         inicio.inicializar();
         inicio.setControlador(control);
 

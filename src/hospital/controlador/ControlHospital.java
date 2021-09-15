@@ -96,31 +96,30 @@ public class ControlHospital implements ActionListener {
     ResultSet rs;
 
     public void db_obtener_medicamentos() {
+        ArrayList<Medicamentos> auxMedicamentos = new ArrayList<>();
         try {
             Connection conexion = conecta.getConnection();
             ps = conexion.prepareStatement("select * from medicamentos");
-            ps.executeUpdate();
-            for (int i = 0; i < aMedicamentos.size(); i++) {
-                ps = conexion.prepareStatement("insert into medicamentos (nombre,principio,tipo,gramaje,stock) values (?,?,?,?,?)");
-                ps.setString(1, aMedicamentos.get(i).getNombre());
-                ps.setString(2, aMedicamentos.get(i).getPrincipio());
-                ps.setString(3, aMedicamentos.get(i).getTipo());
-                ps.setInt(4, aMedicamentos.get(i).getGramaje());
-                ps.setInt(5, aMedicamentos.get(i).getStock());
-                ps.executeUpdate();
-
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Medicamentos medicamentos = new Medicamentos();
+                medicamentos.setNombre(rs.getString("nombre"));
+                medicamentos.setPrincipio(rs.getString("principio"));
+                medicamentos.setTipo(rs.getString("tipo"));
+                medicamentos.setGramaje(rs.getInt("gramaje"));
+                medicamentos.setStock(rs.getInt("stock"));
+                auxMedicamentos.add(medicamentos);
             }
             conexion.close();
         } catch (SQLException ex) {
             System.err.println("Error:" + ex);
         }
+        aMedicamentos = auxMedicamentos;
     }
 
     public void db_guardar_medicamentos() {
         try {
             Connection conexion = conecta.getConnection();
-            ps = conexion.prepareStatement("delete from medicamentos");
-            ps.executeUpdate();
             for (int i = 0; i < aMedicamentos.size(); i++) {
                 ps = conexion.prepareStatement("insert into medicamentos (nombre,principio,tipo,gramaje,stock) values (?,?,?,?,?)");
                 ps.setString(1, aMedicamentos.get(i).getNombre());
@@ -129,7 +128,6 @@ public class ControlHospital implements ActionListener {
                 ps.setInt(4, aMedicamentos.get(i).getGramaje());
                 ps.setInt(5, aMedicamentos.get(i).getStock());
                 ps.executeUpdate();
-
             }
             conexion.close();
         } catch (SQLException ex) {
@@ -137,11 +135,46 @@ public class ControlHospital implements ActionListener {
         }
     }
 
+    public void db_borrar_medicamentos() {
+        try {
+            Connection conexion = conecta.getConnection();
+            ps = conexion.prepareStatement("delete from medicamentos");
+            ps.executeUpdate();
+            conexion.close();
+        } catch (SQLException ex) {
+            System.err.println("Error:" + ex);
+        }
+    }
+
+    public void db_obtener_citas() {
+        ArrayList<Citas> auxCitas = new ArrayList<>();
+        try {
+            Connection conexion = conecta.getConnection();
+            ps = conexion.prepareStatement("select * from citas");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Citas citas = new Citas();
+                citas.setNombre(rs.getString("nombre"));
+                citas.setApellidoPaterno(rs.getString("apellidoP"));
+                citas.setApellidoMaterno(rs.getString("apellidoM"));
+                citas.setDia(rs.getString("dia"));
+                citas.setMes(rs.getString("mes"));
+                citas.setAnio(rs.getString("anio"));
+                citas.setHora(rs.getString("hora"));
+                citas.setDescripcion(rs.getString("descripcion"));
+                citas.setConsultorio(rs.getString("consultorio"));
+                auxCitas.add(citas);
+            }
+            conexion.close();
+        } catch (SQLException ex) {
+            System.err.println("Error:" + ex);
+        }
+        aCitas = auxCitas;
+    }
+
     public void db_guardar_citas() {
         try {
             Connection conexion = conecta.getConnection();
-            ps = conexion.prepareStatement("delete from citas");
-            ps.executeUpdate();
             for (int i = 0; i < aCitas.size(); i++) {
                 ps = conexion.prepareStatement("insert into citas (nombre,apellidoP,"
                         + "apellidoM,dia,mes,anio,hora,descripcion,consultorio) "
@@ -157,6 +190,17 @@ public class ControlHospital implements ActionListener {
                 ps.setString(9, aCitas.get(i).getConsultorio());
                 ps.executeUpdate();
             }
+            conexion.close();
+        } catch (SQLException ex) {
+            System.err.println("Error:" + ex);
+        }
+    }
+
+    public void db_borrar_citas() {
+        try {
+            Connection conexion = conecta.getConnection();
+            ps = conexion.prepareStatement("delete from citas");
+            ps.executeUpdate();
             conexion.close();
         } catch (SQLException ex) {
             System.err.println("Error:" + ex);
@@ -352,11 +396,10 @@ public class ControlHospital implements ActionListener {
         }
         //Opción mostrar citas
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_MOSTRAR_CITAS)) {
+            db_obtener_citas();
             IMostrarCitas.mostrar_citas(aCitas);
             IMostrarCitas.visualizar();
             IOpcionCitas.esconder();
-            db_guardar_consultorios();
-            db_guardar_citas();
         }
         //Volver a opciones de citas desde opcion mostrar
         if (evento.getActionCommand().equals(InterfazMostrar.VOLVER_OPCIONES_CITA)) {
@@ -367,9 +410,11 @@ public class ControlHospital implements ActionListener {
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_AGREGAR_CITA)) {
             IAgregarCita.visualizar();
             IOpcionCitas.esconder();
+            db_obtener_citas();
         }
 
         if (evento.getActionCommand().equals(InterfazAgregar.AGREGAR_CITA)) {
+            db_borrar_citas();
             boolean c = false;
             int indice_c = 0;
 
@@ -425,9 +470,11 @@ public class ControlHospital implements ActionListener {
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_MODIFICAR_CITA)) {
             IModificarCitaInicio.visualizar();
             IOpcionCitas.esconder();
+            db_obtener_citas();;
         }
         // Ir a ventana modificar cita
         if (evento.getActionCommand().equals(InterfazModificarInicio.MODIFICAR_CITA)) {
+            db_borrar_citas();
             t_consultorio = false;
             indice_cita = -1;
             nombre_cita = IModificarCitaInicio.modificar();
@@ -464,6 +511,7 @@ public class ControlHospital implements ActionListener {
 
         //Modificar cita
         if (evento.getActionCommand().equals(InterfazModificar.MODIFICAR_CITA)) {
+            db_borrar_citas();
             t_cita = false;
             int indice_c = 0;
             citas = IModificarCita.modificar_citas();
@@ -506,6 +554,7 @@ public class ControlHospital implements ActionListener {
         }
         //Eliminar cita
         if (evento.getActionCommand().equals(InterfazEliminar.ELIMINAR_CITA)) {
+            db_borrar_citas();
             indice_cita = -1;
             nombre_cita = IEliminarCita.eliminar();
             for (int i = 0; i < aCitas.size(); ++i) {
@@ -544,11 +593,10 @@ public class ControlHospital implements ActionListener {
         }
         //Opción mostrar medicamentos
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_MOSTRAR_MED)) {
+            db_obtener_medicamentos();
             IMostrarMedicamentos.mostrar_medicamentos(aMedicamentos);
             IMostrarMedicamentos.visualizar();
             IOpcionMedicamentos.esconder();
-            db_guardar_medicamentos();
-
         }
         //Volver a opciones de medicamentos desde opcion mostrar
         if (evento.getActionCommand().equals(InterfazMostrar.VOLVER_OPCIONES_MED)) {
@@ -559,9 +607,11 @@ public class ControlHospital implements ActionListener {
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_AGREGAR_MED)) {
             IAgregarMedicamento.visualizar();
             IOpcionMedicamentos.esconder();
+            db_obtener_medicamentos();
         }
         //Agregar medicamento
         if (evento.getActionCommand().equals(InterfazAgregar.AGREGAR_MED)) {
+            db_borrar_medicamentos();
             t_med = false;
             medicamentos = IAgregarMedicamento.agregar_med();
             String nombre = medicamentos.getNombre();
@@ -594,9 +644,11 @@ public class ControlHospital implements ActionListener {
         if (evento.getActionCommand().equals(InterfazOpcion.VENTANA_MODIFICAR_MED)) {
             IModificarMedicamentoInicio.visualizar();
             IOpcionMedicamentos.esconder();
+            db_obtener_medicamentos();
         }
         // Ir a ventana modificar medicamento
         if (evento.getActionCommand().equals(InterfazModificarInicio.MODIFICAR_MED)) {
+            db_borrar_medicamentos();
             indice_med = -1;
             nombre_med = IModificarMedicamentoInicio.modificar();
             for (int i = 0; i < aMedicamentos.size(); ++i) {
@@ -611,11 +663,12 @@ public class ControlHospital implements ActionListener {
                 IModificarMedicamento.escribir(aMedicamentos.get(indice_med));
                 IModificarMedicamento.visualizar();
             }
-
+            db_guardar_medicamentos();
         }
         //Modificar medicamento
 
         if (evento.getActionCommand().equals(InterfazModificar.MODIFICAR_MED)) {
+            db_borrar_medicamentos();
             medicamentos = IModificarMedicamento.modificar_med();
             JOptionPane.showMessageDialog(null, "Medicamento modificado");
             aMedicamentos.set(indice_med, medicamentos);
@@ -646,6 +699,7 @@ public class ControlHospital implements ActionListener {
         //Eliminar medicamento
 
         if (evento.getActionCommand().equals(InterfazEliminar.ELIMINAR_MED)) {
+            db_borrar_medicamentos();
             indice_med = -1;
             nombre_med = IEliminarMedicamento.eliminar();
             for (int i = 0; i < aMedicamentos.size(); ++i) {
